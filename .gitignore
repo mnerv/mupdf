@@ -6,6 +6,7 @@ thirdparty/cmap-resources
 
 # Generated files:
 build
+build-web
 generated/resources/fonts/droid
 generated/resources/fonts/han
 generated/resources/fonts/noto

@@ -15,6 +15,9 @@ build system replacing the original Makefile.
 
 ```sh
 cmake -B build -DCMAKE_BUILD_TYPE=Release
+```
+
+```sh
 cmake --build build
 ```
 
@@ -23,8 +26,25 @@ or use:
 
 ```sh
 cmake -B build -G "Visual Studio 17 2022"
+```
+
+```sh
 cmake --build build --config Release
 ```
+
+### Emscripten / WebAssembly
+
+Use `emcmake` to configure and then build normally. With the official Docker image:
+
+```sh
+docker run -it --rm -v "$(pwd):/src" emscripten/emsdk:5.0.2 emcmake cmake -S . -B build-web -DCMAKE_BUILD_TYPE=Release
+```
+
+```sh
+docker run -it --rm -v "$(pwd):/src" emscripten/emsdk:5.0.2 cmake --build build-web -j
+```
+
+This produces `libmupdf.a` and `libmupdf_third.a` under `build-web/` that you can link into your own Emscripten application target.
 
 ## Consuming the library
 

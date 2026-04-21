@@ -191,9 +191,18 @@ add_library(mupdf_gumbo OBJECT
 )
 target_include_directories(mupdf_gumbo PRIVATE
     thirdparty/gumbo-parser/src
-    scripts/compat   # strings.h shim for Windows (strcasecmp / strncasecmp)
+    # Only add the compat dir on MSVC. On GCC/Clang/Emscripten the gumbo
+    # sources already include <strings.h> directly and the system header
+    # provides strcasecmp/strncasecmp. Adding scripts/compat/ on those
+    # toolchains causes our strings.h shim to shadow the system header,
+    # which then #pragma-once-blocks itself and the real declarations never load.
+    $<$<BOOL:${_mupdf_is_msvc}>:scripts/compat>
 )
-if(NOT _mupdf_is_msvc)
+if(_mupdf_is_msvc)
+    target_compile_options(mupdf_gumbo PRIVATE
+        /FI${CMAKE_CURRENT_SOURCE_DIR}/scripts/compat/strings.h
+    )
+else()
     target_compile_options(mupdf_gumbo PRIVATE -std=c99)
 endif()
 
@@ -534,7 +543,8 @@ target_compile_definitions(mupdf PRIVATE
 )
 
 # skew.c / deskew_sse.h use SSSE3 and SSE4.1 intrinsics; safe on any modern x86-64.
-if(NOT _mupdf_is_msvc)
+# Emscripten targets wasm32 which has no x86 SIMD via -msse4.1.
+if(NOT _mupdf_is_msvc AND NOT EMSCRIPTEN)
     target_compile_options(mupdf PRIVATE -msse4.1)
 endif()
 
