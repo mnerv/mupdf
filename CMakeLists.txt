@@ -191,18 +191,13 @@ add_library(mupdf_gumbo OBJECT
 )
 target_include_directories(mupdf_gumbo PRIVATE
     thirdparty/gumbo-parser/src
-    # Only add the compat dir on MSVC. On GCC/Clang/Emscripten the gumbo
-    # sources already include <strings.h> directly and the system header
-    # provides strcasecmp/strncasecmp. Adding scripts/compat/ on those
-    # toolchains causes our strings.h shim to shadow the system header,
-    # which then #pragma-once-blocks itself and the real declarations never load.
-    $<$<BOOL:${_mupdf_is_msvc}>:scripts/compat>
+    # Windows (MSVC and Clang-on-Windows) has no system <strings.h>, so the
+    # compat shim must be on the path. On Linux/macOS/Emscripten the shim would
+    # shadow the real system header (causing a #pragma-once self-block), so we
+    # only add it on WIN32.
+    $<$<BOOL:${WIN32}>:${CMAKE_CURRENT_SOURCE_DIR}/scripts/compat>
 )
-if(_mupdf_is_msvc)
-    target_compile_options(mupdf_gumbo PRIVATE
-        /FI${CMAKE_CURRENT_SOURCE_DIR}/scripts/compat/strings.h
-    )
-else()
+if(NOT _mupdf_is_msvc)
     target_compile_options(mupdf_gumbo PRIVATE -std=c99)
 endif()
 
